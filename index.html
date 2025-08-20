@@ -151,11 +151,10 @@
         const card = document.createElement('div');
         card.className = 'card';
 
-        const img = document.createElement('img');
-        img.src = ad.image;
+     const img = document.createElement('img');
+        img.src = ad.network_icon;   // ✅ fixed
         img.alt = ad.name;
         card.appendChild(img);
-
         const title = document.createElement('h3');
         title.textContent = ad.name;
         card.appendChild(title);
@@ -206,3 +205,4 @@
 
 </body>
 </html>
+
