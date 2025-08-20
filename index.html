@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Your File</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+  }
+
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  header {
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+    text-align: center;
+  }
+
+  header img {
+    max-width: 200px;
+    height: auto;
+    border-radius: 24px; /* rounded edges */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  }
+
+  h1 {
+    margin: 15px 0;
+    text-align: center;
+    color: #222;
+  }
+
+  #loading {
+    font-size: 18px;
+    color: #555;
+    margin: 20px 0;
+  }
+
+  #offersGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+    padding: 20px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+  }
+
+  .card img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    background: #f9fafb;
+    padding: 6px;
+  }
+
+  .card h3 {
+    font-size: 18px;
+    margin: 8px 0;
+    color: #222;
+  }
+
+  .card p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
+  }
+
+  .btn {
+    padding: 10px 18px;
+    background: #ff6f61;
+    border: none;
+    border-radius: 9999px;
+    color: white;
+    font-weight: bold;
+    transition: background 0.3s;
+    cursor: pointer;
+    width: 100%;
+    max-width: 180px;
+  }
+
+  .btn:hover {
+    background: #ff4b3c;
+  }
+
+  #footer {
+    margin: 40px 0 20px;
+    font-size: 12px;
+    color: #fff;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="image.png" alt="Header Image">
+  <h1>Complete an Offer to Get Your File</h1>
+</header>
+
+<div id="loading">Loading offers... Please disable adblocker if needed.</div>
+<div id="offersGrid"></div>
+<div id="footer">All offers are safe and your file is ready to download!</div>
+
+<script>
+  const offersGrid = document.getElementById('offersGrid');
+  const loadingEl = document.getElementById('loading');
+  const MEGA_LINK = "https://mega.nz/file/Yvk0HbJa#DpkEokl-tw2IRTYsVceaWKCsrpNmUS2gpTePqtlwuFA";
+
+  async function fetchOffers() {
+    try {
+      const res = await fetch("https://d3o07fqjkwc0s0.cloudfront.net/public/offers/feed.php?user_id=623910&api_key=525aedb31fa76c26997f25d2b15e501f&s1=&s2=");
+      const adsData = await res.json();
+
+      loadingEl.style.display = 'none';
+
+      adsData.forEach(ad => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const img = document.createElement('img');
+        img.src = ad.image;
+        img.alt = ad.name;
+        card.appendChild(img);
+
+        const title = document.createElement('h3');
+        title.textContent = ad.name;
+        card.appendChild(title);
+
+        const conversion = document.createElement('p');
+        conversion.textContent = ad.conversion;
+        card.appendChild(conversion);
+
+        const button = document.createElement('button');
+        button.className = 'btn';
+        button.textContent = "Complete Offer";
+        button.onclick = () => openOffer(ad.url, ad.id);
+        card.appendChild(button);
+
+        offersGrid.appendChild(card);
+      });
+
+    } catch (err) {
+      loadingEl.textContent = 'Failed to load offers.';
+      console.error(err);
+    }
+  }
+
+  function openOffer(offerUrl, offerId) {
+    window.open(offerUrl, '_blank');
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("https://d3o07fqjkwc0s0.cloudfront.net/public/external/check2.php?testing=0&callback=?");
+        const text = await res.text();
+        const json = JSON.parse(text.replace(/^\?\((.*)\)$/, '$1'));
+
+        const completed = json.some(lead => lead.offer_id === offerId);
+
+        if (completed) {
+          clearInterval(interval);
+          alert("✅ Offer completed! Redirecting to your file...");
+          window.location.href = MEGA_LINK;
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }, 15000);
+  }
+
+  fetchOffers();
+</script>
+
+</body>
+</html>
